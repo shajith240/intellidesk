@@ -1,0 +1,182 @@
+/* ═══════════════════════════════════════════════════════════════════
+   IntelliDesk.AI — Theme System
+   ═══════════════════════════════════════════════════════════════════
+   :root = light theme (base), .dark = dark override.
+   .dark MUST come after :root so it wins when the class is present.
+   All values use OKLCH for perceptual uniformity.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── Light Theme (Base) ─────────────────────────────────────────── */
+:root {
+	--background: oklch(0.98 0 0);
+	--foreground: oklch(0.13 0 0);
+	--card: oklch(1 0 0);
+	--card-foreground: oklch(0.13 0 0);
+	--popover: oklch(1 0 0);
+	--popover-foreground: oklch(0.13 0 0);
+	--surface-raised: oklch(0.97 0 0);
+	--surface-overlay: oklch(0.95 0 0);
+	--primary: oklch(0.55 0.22 265);
+	--primary-foreground: oklch(0.98 0 0);
+	--primary-glow: oklch(0.55 0.22 265 / 15%);
+	--primary-subtle: oklch(0.55 0.22 265 / 8%);
+	--secondary: oklch(0.96 0 0);
+	--secondary-foreground: oklch(0.13 0 0);
+	--muted: oklch(0.96 0 0);
+	--muted-foreground: oklch(0.5 0 0);
+	--accent: oklch(0.55 0.15 180);
+	--accent-foreground: oklch(0.98 0 0);
+	--accent-glow: oklch(0.55 0.15 180 / 12%);
+	--destructive: oklch(0.55 0.25 25);
+	--destructive-foreground: oklch(0.98 0 0);
+	--success: oklch(0.55 0.22 155);
+	--success-foreground: oklch(0.98 0 0);
+	--warning: oklch(0.7 0.18 85);
+	--warning-foreground: oklch(0.13 0 0);
+	--border: oklch(0 0 0 / 8%);
+	--border-bright: oklch(0 0 0 / 15%);
+	--input: oklch(0 0 0 / 6%);
+	--ring: oklch(0.55 0.22 265 / 30%);
+	--chart-1: oklch(0.55 0.22 265);
+	--chart-2: oklch(0.55 0.15 180);
+	--chart-3: oklch(0.7 0.18 85);
+	--chart-4: oklch(0.55 0.25 25);
+	--chart-5: oklch(0.55 0.22 155);
+	--sidebar: oklch(0.97 0 0);
+	--sidebar-foreground: oklch(0.2 0 0);
+	--sidebar-primary: oklch(0.55 0.22 265);
+	--sidebar-primary-foreground: oklch(0.98 0 0);
+	--sidebar-accent: oklch(0.94 0.01 270);
+	--sidebar-accent-foreground: oklch(0.13 0 0);
+	--sidebar-border: oklch(0 0 0 / 8%);
+	--sidebar-ring: oklch(0.55 0.22 265 / 20%);
+	--severity-p1: oklch(0.55 0.25 25);
+	--severity-p2: oklch(0.65 0.18 55);
+	--severity-p3: oklch(0.7 0.16 90);
+	--severity-p4: oklch(0.55 0.16 250);
+	--status-open: oklch(0.55 0.22 155);
+	--status-in-progress: oklch(0.55 0.22 265);
+	--status-waiting: oklch(0.7 0.18 85);
+	--status-resolved: oklch(0.5 0.01 270);
+	--status-closed: oklch(0.4 0.01 270);
+	--radius: 0.75rem;
+	--glass-bg: oklch(1 0 0 / 80%);
+	--glass-border: oklch(0 0 0 / 8%);
+	--gradient-primary: linear-gradient(
+		135deg,
+		oklch(0.55 0.22 265),
+		oklch(0.5 0.2 290)
+	);
+	--gradient-accent: linear-gradient(
+		135deg,
+		oklch(0.55 0.15 180),
+		oklch(0.55 0.22 155)
+	);
+	--gradient-surface: linear-gradient(180deg, oklch(1 0 0), oklch(0.98 0 0));
+}
+
+/* ─── Dark Theme (Override — must come after :root) ──────────────── */
+.dark {
+	/* Base surfaces */
+	--background: oklch(0.13 0.005 270);
+	--foreground: oklch(0.95 0.005 270);
+	--card: oklch(0.16 0.008 270);
+	--card-foreground: oklch(0.95 0.005 270);
+	--popover: oklch(0.18 0.008 270);
+	--popover-foreground: oklch(0.95 0.005 270);
+
+	/* Elevated surfaces */
+	--surface-raised: oklch(0.19 0.01 270);
+	--surface-overlay: oklch(0.22 0.01 270);
+
+	/* Primary — Electric violet-blue */
+	--primary: oklch(0.72 0.19 265);
+	--primary-foreground: oklch(0.98 0 0);
+	--primary-glow: oklch(0.72 0.19 265 / 25%);
+	--primary-subtle: oklch(0.72 0.19 265 / 10%);
+
+	/* Secondary */
+	--secondary: oklch(0.22 0.01 270);
+	--secondary-foreground: oklch(0.88 0 270);
+
+	/* Muted */
+	--muted: oklch(0.2 0.008 270);
+	--muted-foreground: oklch(0.6 0.01 270);
+
+	/* Accent — Teal */
+	--accent: oklch(0.7 0.14 180);
+	--accent-foreground: oklch(0.98 0 0);
+	--accent-glow: oklch(0.7 0.14 180 / 20%);
+
+	/* Destructive */
+	--destructive: oklch(0.65 0.22 25);
+	--destructive-foreground: oklch(0.98 0 0);
+
+	/* Success */
+	--success: oklch(0.72 0.19 155);
+	--success-foreground: oklch(0.98 0 0);
+
+	/* Warning */
+	--warning: oklch(0.8 0.16 85);
+	--warning-foreground: oklch(0.15 0.02 85);
+
+	/* Borders & Inputs */
+	--border: oklch(1 0 0 / 8%);
+	--border-bright: oklch(1 0 0 / 15%);
+	--input: oklch(1 0 0 / 8%);
+	--ring: oklch(0.72 0.19 265 / 40%);
+
+	/* Charts */
+	--chart-1: oklch(0.72 0.19 265);
+	--chart-2: oklch(0.7 0.14 180);
+	--chart-3: oklch(0.8 0.16 85);
+	--chart-4: oklch(0.65 0.22 25);
+	--chart-5: oklch(0.72 0.19 155);
+
+	/* Sidebar */
+	--sidebar: oklch(0.11 0.008 270);
+	--sidebar-foreground: oklch(0.88 0.005 270);
+	--sidebar-primary: oklch(0.72 0.19 265);
+	--sidebar-primary-foreground: oklch(0.98 0 0);
+	--sidebar-accent: oklch(0.18 0.012 270);
+	--sidebar-accent-foreground: oklch(0.95 0 0);
+	--sidebar-border: oklch(1 0 0 / 6%);
+	--sidebar-ring: oklch(0.72 0.19 265 / 30%);
+
+	/* Severity */
+	--severity-p1: oklch(0.65 0.25 25);
+	--severity-p2: oklch(0.75 0.18 55);
+	--severity-p3: oklch(0.82 0.16 90);
+	--severity-p4: oklch(0.68 0.16 250);
+
+	/* Status */
+	--status-open: oklch(0.72 0.19 155);
+	--status-in-progress: oklch(0.72 0.19 265);
+	--status-waiting: oklch(0.8 0.16 85);
+	--status-resolved: oklch(0.6 0.01 270);
+	--status-closed: oklch(0.45 0.01 270);
+
+	/* Radius */
+	--radius: 0.75rem;
+
+	/* Glass effects */
+	--glass-bg: oklch(0.16 0.008 270 / 80%);
+	--glass-border: oklch(1 0 0 / 8%);
+
+	/* Gradient presets */
+	--gradient-primary: linear-gradient(
+		135deg,
+		oklch(0.72 0.19 265),
+		oklch(0.65 0.18 290)
+	);
+	--gradient-accent: linear-gradient(
+		135deg,
+		oklch(0.7 0.14 180),
+		oklch(0.72 0.19 155)
+	);
+	--gradient-surface: linear-gradient(
+		180deg,
+		oklch(0.16 0.008 270),
+		oklch(0.14 0.006 270)
+	);
+}

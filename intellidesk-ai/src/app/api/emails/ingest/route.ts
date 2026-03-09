@@ -1,0 +1,54 @@
+import { NextRequest, NextResponse } from "next/server";
+import { processEmail } from "@/lib/pipeline/processor";
+import type { RawEmail } from "@/types";
+
+export async function POST(req: NextRequest) {
+	try {
+		const body = await req.json();
+
+		// Validate required fields
+		const required = [
+			"from_address",
+			"subject",
+			"received_at",
+			"organization_id",
+		];
+		for (const field of required) {
+			if (!body[field]) {
+				return NextResponse.json(
+					{ error: `Missing required field: ${field}` },
+					{ status: 400 },
+				);
+			}
+		}
+
+		const orgId: string = body.organization_id;
+
+		const rawEmail: RawEmail = {
+			message_id: body.message_id || null,
+			from_address: body.from_address,
+			from_name: body.from_name || "",
+			to_address: body.to_address || "",
+			cc: body.cc || null,
+			subject: body.subject,
+			body_text: body.body_text || "",
+			body_html: body.body_html || "",
+			received_at: body.received_at,
+			in_reply_to: body.in_reply_to || null,
+			references: body.references || [],
+			raw_headers: body.headers || body.raw_headers || {},
+		};
+
+		const result = await processEmail(rawEmail, orgId);
+
+		return NextResponse.json(result, {
+			status: result.status === "error" ? 500 : 200,
+		});
+	} catch (error) {
+		console.error("Email ingest error:", error);
+		return NextResponse.json(
+			{ error: "Failed to process email" },
+			{ status: 500 },
+		);
+	}
+}
