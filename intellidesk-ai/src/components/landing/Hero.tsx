@@ -1,11 +1,11 @@
-const APP_URL = import.meta.env.VITE_APP_URL || "http://localhost:3000";
-
-import { lazy, Suspense } from "react";
+'use client';
+import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import GradientText from "@/components/ui/gradient-text";
 
-const HeroCubeScene = lazy(() => import("./HeroCubeScene"));
+const HeroCubeScene = dynamic(() => import("./HeroCubeScene"), { ssr: false });
 
 const ease = [0.25, 0.1, 0.25, 1] as const;
 
@@ -115,8 +115,8 @@ const Hero = () => {
 								transition={{ duration: 0.7, ease, delay: 0.24 }}
 								className="mt-10 flex flex-col sm:flex-row gap-4"
 							>
-								<a
-									href={`${APP_URL}/signup`}
+								<Link
+									href="/signup"
 									className="group relative inline-flex items-center justify-center gap-2 font-medium px-8 py-3.5 rounded-xl text-sm transition-all hover:-translate-y-0.5 overflow-hidden text-white"
 									style={{
 										background:
@@ -132,7 +132,7 @@ const Hero = () => {
 											className="group-hover:translate-x-0.5 transition-transform"
 										/>
 									</span>
-								</a>
+								</Link>
 								<button
 									className="inline-flex items-center justify-center gap-2 font-medium text-sm px-8 py-3.5 rounded-xl transition-all border border-[rgba(255,255,255,0.1)] hover:border-[rgba(255,255,255,0.2)] text-[#d4d4d8] hover:text-white"
 									style={{
@@ -213,9 +213,7 @@ const Hero = () => {
 
 						{/* Cube canvas — clipped */}
 						<div className="absolute inset-0 z-10 overflow-hidden">
-							<Suspense fallback={null}>
-								<HeroCubeScene className="absolute inset-0" />
-							</Suspense>
+							<HeroCubeScene className="absolute inset-0" />
 						</div>
 						</motion.div>
 					</div>

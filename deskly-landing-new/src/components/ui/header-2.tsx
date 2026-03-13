@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
 import { useScroll } from "@/components/ui/use-scroll";
 
+const APP_URL = import.meta.env.VITE_APP_URL || "http://localhost:3000";
+
 export function Header() {
 	const [open, setOpen] = React.useState(false);
 	const scrolled = useScroll(10);
@@ -62,8 +64,8 @@ export function Header() {
 							{link.label}
 						</a>
 					))}
-					<Button variant="outline">Sign In</Button>
-					<Button>Get Started</Button>
+					<Button variant="outline" asChild><a href={`${APP_URL}/login`}>Sign In</a></Button>
+					<Button asChild><a href={`${APP_URL}/signup`}>Get Started</a></Button>
 				</div>
 				<Button
 					size="icon"
@@ -103,10 +105,8 @@ export function Header() {
 						))}
 					</div>
 					<div className="flex flex-col gap-2">
-						<Button variant="outline" className="w-full">
-							Sign In
-						</Button>
-						<Button className="w-full">Get Started</Button>
+						<Button variant="outline" className="w-full" asChild><a href={`${APP_URL}/login`}>Sign In</a></Button>
+						<Button className="w-full" asChild><a href={`${APP_URL}/signup`}>Get Started</a></Button>
 					</div>
 				</div>
 			</div>

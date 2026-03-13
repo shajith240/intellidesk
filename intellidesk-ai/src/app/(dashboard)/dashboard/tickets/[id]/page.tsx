@@ -121,7 +121,7 @@ export default function TicketDetailPage({
 			setData(json);
 		} catch {
 			toast.error("Ticket not found");
-			router.push("/tickets");
+			router.push("/dashboard/tickets");
 		} finally {
 			setLoading(false);
 		}
@@ -892,7 +892,7 @@ export default function TicketDetailPage({
 													<div
 														key={st.id as string}
 														className="p-2 border border-border/30 rounded-lg cursor-pointer hover:bg-muted/30 transition-colors"
-														onClick={() => router.push(`/tickets/${st.id}`)}
+														onClick={() => router.push(`/dashboard/tickets/${st.id}`)}
 													>
 														<div className="flex items-center gap-1.5">
 															<span

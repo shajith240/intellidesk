@@ -1,5 +1,5 @@
-const APP_URL = import.meta.env.VITE_APP_URL || "http://localhost:3000";
-
+'use client';
+import Link from 'next/link';
 import { motion } from "framer-motion";
 import { Check, ArrowRight } from "lucide-react";
 
@@ -18,7 +18,7 @@ const plans = [
 			"Email support",
 		],
 		cta: "Get Started Free",
-		href: APP_URL + "/signup",
+		href: "/signup",
 		highlight: false,
 	},
 	{
@@ -36,7 +36,7 @@ const plans = [
 			"Priority support",
 		],
 		cta: "Start Free Trial",
-		href: APP_URL + "/signup",
+		href: "/signup",
 		highlight: true,
 	},
 	{
@@ -54,7 +54,7 @@ const plans = [
 			"On-premise option",
 		],
 		cta: "Contact Sales",
-		href: "#",
+		href: "/signup",
 		highlight: false,
 	},
 ];
@@ -126,7 +126,7 @@ const Pricing = () => (
 							))}
 						</ul>
 
-						<a
+						<Link
 							href={plan.href}
 							className={`mt-8 w-full py-3.5 rounded-xl font-semibold text-sm transition-all inline-flex items-center justify-center gap-2 ${
 								plan.highlight
@@ -150,7 +150,7 @@ const Pricing = () => (
 						>
 							{plan.cta}
 							{plan.highlight && <ArrowRight size={16} />}
-						</a>
+						</Link>
 					</motion.div>
 				))}
 			</div>

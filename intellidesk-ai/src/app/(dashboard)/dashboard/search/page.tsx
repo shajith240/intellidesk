@@ -223,7 +223,7 @@ export default function SearchPage() {
 																</p>
 															</div>
 															<Link
-																href={`/tickets/${t.id}`}
+																href={`/dashboard/tickets/${t.id}`}
 																className="ml-3 shrink-0"
 															>
 																<ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-foreground transition-colors" />

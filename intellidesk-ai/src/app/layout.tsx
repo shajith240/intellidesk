@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono, Playfair_Display } from "next/font/google";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
@@ -12,6 +12,12 @@ const inter = Inter({
 const jetbrainsMono = JetBrains_Mono({
 	variable: "--font-geist-mono",
 	subsets: ["latin"],
+});
+
+const playfairDisplay = Playfair_Display({
+	variable: "--font-serif",
+	subsets: ["latin"],
+	style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -28,7 +34,7 @@ export default function RootLayout({
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body
-				className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
+				className={`${inter.variable} ${jetbrainsMono.variable} ${playfairDisplay.variable} antialiased`}
 			>
 				<ThemeProvider>
 					{children}

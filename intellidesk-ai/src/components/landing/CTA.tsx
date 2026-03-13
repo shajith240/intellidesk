@@ -1,5 +1,5 @@
-const APP_URL = import.meta.env.VITE_APP_URL || "http://localhost:3000";
-
+'use client';
+import Link from 'next/link';
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 
@@ -28,10 +28,10 @@ const CTA = () => (
         </p>
 
         <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-          <a href={`${APP_URL}/signup`} className="group inline-flex items-center justify-center gap-2 bg-[#6366f1] hover:bg-[#818cf8] text-primary-foreground font-semibold px-8 py-4 rounded-2xl transition-all hover:shadow-2xl hover:shadow-[#6366f1]/20 hover:-translate-y-0.5">
+          <Link href="/signup" className="group inline-flex items-center justify-center gap-2 bg-[#6366f1] hover:bg-[#818cf8] text-primary-foreground font-semibold px-8 py-4 rounded-2xl transition-all hover:shadow-2xl hover:shadow-[#6366f1]/20 hover:-translate-y-0.5">
             Get Started Free
             <ArrowRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
-          </button>
+          </Link>
           <button className="inline-flex items-center justify-center gap-2 border border-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.15)] bg-[rgba(255,255,255,0.03)] hover:bg-[rgba(255,255,255,0.06)] backdrop-blur-sm text-[#d4d4d8] hover:text-foreground font-semibold px-8 py-4 rounded-2xl transition-all">
             Talk to Sales
           </button>

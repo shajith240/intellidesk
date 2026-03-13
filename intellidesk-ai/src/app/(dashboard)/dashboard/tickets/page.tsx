@@ -306,7 +306,7 @@ export default function TicketsPage() {
 													</TableCell>
 													<TableCell className="max-w-[280px] truncate text-sm font-medium">
 														<Link
-															href={`/tickets/${ticket.id}`}
+															href={`/dashboard/tickets/${ticket.id}`}
 															className="hover:text-primary transition-colors"
 														>
 															{ticket.subject}
@@ -364,7 +364,7 @@ export default function TicketsPage() {
 													</TableCell>
 													<TableCell>
 														<Link
-															href={`/tickets/${ticket.id}`}
+															href={`/dashboard/tickets/${ticket.id}`}
 															className="opacity-0 group-hover:opacity-100 transition-opacity"
 														>
 															<ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground hover:text-primary transition-colors" />

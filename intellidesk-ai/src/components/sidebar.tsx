@@ -25,12 +25,12 @@ import { useSession, signOut } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navItems = [
-	{ href: "/", label: "Dashboard", icon: LayoutDashboard },
-	{ href: "/emails", label: "Email Queue", icon: Mail },
-	{ href: "/tickets", label: "Tickets", icon: Ticket },
-	{ href: "/knowledge-base", label: "Knowledge Base", icon: BookOpen },
-	{ href: "/search", label: "Search", icon: Search },
-	{ href: "/settings", label: "Settings", icon: Settings },
+	{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+	{ href: "/dashboard/emails", label: "Email Queue", icon: Mail },
+	{ href: "/dashboard/tickets", label: "Tickets", icon: Ticket },
+	{ href: "/dashboard/knowledge-base", label: "Knowledge Base", icon: BookOpen },
+	{ href: "/dashboard/search", label: "Search", icon: Search },
+	{ href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
 export function Sidebar() {
@@ -81,8 +81,8 @@ export function Sidebar() {
 			<nav className="relative flex-1 space-y-0.5 px-2.5 py-4">
 				{navItems.map((item) => {
 					const isActive =
-						item.href === "/"
-							? pathname === "/"
+						item.href === "/dashboard"
+							? pathname === "/dashboard"
 							: pathname.startsWith(item.href);
 					return (
 						<Link

@@ -219,7 +219,7 @@ export default function DashboardPage() {
 										<Ticket className="h-4 w-4 text-primary" />
 									</div>
 									<Link
-										href="/tickets?status=open"
+										href="/dashboard/tickets?status=open"
 										className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-0.5"
 									>
 										View <ArrowUpRight className="h-3 w-3" />
@@ -248,7 +248,7 @@ export default function DashboardPage() {
 										<Mail className="h-4 w-4 text-accent" />
 									</div>
 									<Link
-										href="/emails"
+										href="/dashboard/emails"
 										className="text-xs text-muted-foreground hover:text-accent transition-colors flex items-center gap-0.5"
 									>
 										View <ArrowUpRight className="h-3 w-3" />
@@ -455,7 +455,7 @@ export default function DashboardPage() {
 											return (
 												<Link
 													key={alert.ticket_id}
-													href={`/tickets/${alert.ticket_id}`}
+													href={`/dashboard/tickets/${alert.ticket_id}`}
 													className={`flex items-center gap-2.5 text-sm p-2 rounded-lg border transition-colors duration-200 hover:bg-muted/50 ${isBreach ? "border-destructive/20 bg-destructive/[0.03]" : "border-border/50"}`}
 												>
 													<span
