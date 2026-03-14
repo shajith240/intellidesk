@@ -700,42 +700,69 @@ export async function POST() {
 	try {
 		const supabase = supabaseAdmin;
 
-		// Check if data already exists
+		// Look up the default org (sharpflow) to tag all seed data
+		const { data: org, error: orgError } = await supabase
+			.from("organizations")
+			.select("id")
+			.eq("slug", "sharpflow")
+			.single();
+
+		if (orgError || !org) {
+			return NextResponse.json(
+				{
+					error:
+						"Organization 'sharpflow' not found. Please run migration 005 first.",
+				},
+				{ status: 400 },
+			);
+		}
+		const orgId = org.id;
+
+		// Check if data already exists for this org
 		const { count } = await supabase
 			.from("accounts")
-			.select("*", { count: "exact", head: true });
+			.select("*", { count: "exact", head: true })
+			.eq("organization_id", orgId);
 
 		if (count && count > 0) {
 			return NextResponse.json(
 				{
 					error:
-						"Database already has data. Clear existing data first or skip seeding.",
+						"Database already has data for this org. Clear existing data first or skip seeding.",
 				},
 				{ status: 409 },
 			);
 		}
 
-		// 1. Insert accounts
+		// 1. Insert accounts with organization_id
+		const accountsWithOrg = accounts.map((a) => ({
+			...a,
+			organization_id: orgId,
+		}));
 		const { error: accountsError } = await supabase
 			.from("accounts")
-			.insert(accounts);
+			.insert(accountsWithOrg);
 		if (accountsError) throw new Error(`Accounts: ${accountsError.message}`);
 
-		// 2. Insert contacts
+		// 2. Insert contacts (scoped via account -> org, no org_id column)
 		const contacts = makeContacts(accounts);
 		const { error: contactsError } = await supabase
 			.from("contacts")
 			.insert(contacts);
 		if (contactsError) throw new Error(`Contacts: ${contactsError.message}`);
 
-		// 3. Insert teams
-		const { error: teamsError } = await supabase.from("teams").insert(teams);
+		// 3. Insert teams with organization_id
+		const teamsWithOrg = teams.map((t) => ({ ...t, organization_id: orgId }));
+		const { error: teamsError } = await supabase
+			.from("teams")
+			.insert(teamsWithOrg);
 		if (teamsError) throw new Error(`Teams: ${teamsError.message}`);
 
-		// 4. Insert FAQs (no embeddings — those are generated separately)
+		// 4. Insert FAQs with organization_id (no embeddings — those are generated separately)
 		const faqRecords = faqs.map((f) => ({
 			id: uuidv4(),
 			...f,
+			organization_id: orgId,
 		}));
 		const { error: faqsError } = await supabase.from("faqs").insert(faqRecords);
 		if (faqsError) throw new Error(`FAQs: ${faqsError.message}`);
@@ -755,6 +782,435 @@ export async function POST() {
 		console.error("Seed error:", error);
 		return NextResponse.json(
 			{ error: error instanceof Error ? error.message : "Seed failed" },
+			{ status: 500 },
+		);
+	}
+}
+
+// PATCH: Seed tickets + audit logs directly (no AI pipeline needed)
+export async function PATCH() {
+	if (IS_PRODUCTION) {
+		return NextResponse.json({ error: "Not found" }, { status: 404 });
+	}
+
+	try {
+		const supabase = supabaseAdmin;
+
+		const { data: org } = await supabase
+			.from("organizations")
+			.select("id")
+			.eq("slug", "sharpflow")
+			.single();
+
+		if (!org) {
+			return NextResponse.json(
+				{ error: "Organization 'sharpflow' not found." },
+				{ status: 400 },
+			);
+		}
+		const orgId = org.id;
+
+		// Look up accounts to reference in tickets
+		const { data: accts } = await supabase
+			.from("accounts")
+			.select("id, company_name, domain")
+			.eq("organization_id", orgId);
+
+		const { data: contacts } = await supabase
+			.from("contacts")
+			.select("id, email, account_id")
+			.order("created_at");
+
+		const findAccount = (domain: string) =>
+			accts?.find((a) => a.domain === domain)?.id || null;
+		const findContact = (email: string) =>
+			contacts?.find((c) => c.email === email)?.id || null;
+
+		const now = new Date();
+		const hoursAgo = (h: number) =>
+			new Date(now.getTime() - h * 3600000).toISOString();
+		const daysAgo = (d: number) => hoursAgo(d * 24);
+
+		const ticketRows = [
+			{
+				organization_id: orgId,
+				subject: "URGENT: Production API completely down - all services affected",
+				summary: "Customer reports complete production outage with 503 errors on all endpoints.",
+				status: "In Progress",
+				severity: "P1",
+				category: "Technical Support",
+				subcategory: "Outage",
+				account_id: findAccount("acmecorp.com"),
+				contact_id: findContact("john.doe@acmecorp.com"),
+				ai_confidence: 0.97,
+				assigned_team: "Technical Support",
+				sla_first_response_due: hoursAgo(-1),
+				sla_resolution_due: hoursAgo(-2),
+				sla_breach: true,
+				escalation_count: 1,
+				auto_response_sent: true,
+				auto_response_type: "partial",
+				created_at: hoursAgo(5),
+				updated_at: hoursAgo(1),
+			},
+			{
+				organization_id: orgId,
+				subject: "ESCALATION: Third time reporting critical data loss bug",
+				summary: "Gold-tier customer reports data loss in report exports above 10k rows, third escalation.",
+				status: "In Progress",
+				severity: "P1",
+				category: "Complaint/Escalation",
+				subcategory: "Data Loss",
+				account_id: findAccount("starkindustries.com"),
+				contact_id: findContact("tony@starkindustries.com"),
+				ai_confidence: 0.95,
+				assigned_team: "Customer Success",
+				sla_first_response_due: hoursAgo(-3),
+				sla_resolution_due: hoursAgo(-5),
+				sla_breach: true,
+				escalation_count: 3,
+				auto_response_sent: false,
+				auto_response_type: "none",
+				is_flagged_for_review: true,
+				created_at: hoursAgo(8),
+				updated_at: hoursAgo(2),
+			},
+			{
+				organization_id: orgId,
+				subject: "SSO SAML authentication broken after IdP certificate renewal",
+				summary: "50+ users locked out after IdP cert renewal. SAML response validation failing.",
+				status: "In Progress",
+				severity: "P2",
+				category: "Access Request",
+				subcategory: "SSO",
+				account_id: findAccount("umbrella.net"),
+				contact_id: findContact("jill.v@umbrella.net"),
+				ai_confidence: 0.92,
+				assigned_team: "Access & Security",
+				sla_first_response_due: hoursAgo(1),
+				sla_resolution_due: hoursAgo(-4),
+				sla_breach: false,
+				escalation_count: 0,
+				auto_response_sent: true,
+				auto_response_type: "partial",
+				created_at: hoursAgo(6),
+				updated_at: hoursAgo(3),
+			},
+			{
+				organization_id: orgId,
+				subject: "API rate limiting issues - getting 429 errors frequently",
+				summary: "Business plan customer hitting rate limits at 50 req/min instead of documented 100 req/min.",
+				status: "New",
+				severity: "P2",
+				category: "Technical Support",
+				subcategory: "API",
+				account_id: findAccount("globex.io"),
+				contact_id: findContact("sarah.k@globex.io"),
+				ai_confidence: 0.88,
+				assigned_team: "Technical Support",
+				sla_first_response_due: hoursAgo(-1),
+				sla_resolution_due: hoursAgo(4),
+				sla_breach: false,
+				escalation_count: 0,
+				auto_response_sent: true,
+				auto_response_type: "perfect",
+				created_at: hoursAgo(4),
+				updated_at: hoursAgo(4),
+			},
+			{
+				organization_id: orgId,
+				subject: "GDPR Data Export Request for Umbrella Tech account",
+				summary: "GDPR Article 15 data export request for all company account data.",
+				status: "New",
+				severity: "P2",
+				category: "Data Request",
+				subcategory: "GDPR Export",
+				account_id: findAccount("umbrella.net"),
+				contact_id: findContact("alex.w@umbrella.net"),
+				ai_confidence: 0.91,
+				assigned_team: "Customer Success",
+				sla_first_response_due: hoursAgo(2),
+				sla_resolution_due: hoursAgo(20),
+				sla_breach: false,
+				escalation_count: 0,
+				auto_response_sent: true,
+				auto_response_type: "partial",
+				created_at: hoursAgo(3),
+				updated_at: hoursAgo(3),
+			},
+			{
+				organization_id: orgId,
+				subject: "Invoice discrepancy for October billing cycle",
+				summary: "Enterprise customer billed $500 extra for API overage not matching their usage data.",
+				status: "New",
+				severity: "P3",
+				category: "Billing/Invoice",
+				subcategory: "Overcharge",
+				account_id: findAccount("starkindustries.com"),
+				contact_id: findContact("pepper@starkindustries.com"),
+				ai_confidence: 0.89,
+				assigned_team: "Billing Team",
+				sla_first_response_due: hoursAgo(20),
+				sla_resolution_due: hoursAgo(68),
+				sla_breach: false,
+				escalation_count: 0,
+				auto_response_sent: true,
+				auto_response_type: "perfect",
+				created_at: hoursAgo(2),
+				updated_at: hoursAgo(2),
+			},
+			{
+				organization_id: orgId,
+				subject: "Double charged for November - need refund",
+				summary: "Customer charged twice on Nov 1 and Nov 3 for same billing cycle.",
+				status: "New",
+				severity: "P3",
+				category: "Billing/Invoice",
+				subcategory: "Duplicate Charge",
+				account_id: findAccount("acmecorp.com"),
+				contact_id: findContact("mike.chen@acmecorp.com"),
+				ai_confidence: 0.93,
+				assigned_team: "Billing Team",
+				sla_first_response_due: hoursAgo(18),
+				sla_resolution_due: hoursAgo(66),
+				sla_breach: false,
+				escalation_count: 0,
+				auto_response_sent: true,
+				auto_response_type: "perfect",
+				created_at: hoursAgo(1),
+				updated_at: hoursAgo(1),
+			},
+			{
+				organization_id: orgId,
+				subject: "Need admin access for new project",
+				summary: "Developer requesting admin role upgrade for data migration project, manager approved.",
+				status: "New",
+				severity: "P3",
+				category: "Access Request",
+				subcategory: "Role Upgrade",
+				account_id: findAccount("initech.co"),
+				contact_id: findContact("peter.g@initech.co"),
+				ai_confidence: 0.86,
+				assigned_team: "Access & Security",
+				sla_first_response_due: hoursAgo(16),
+				sla_resolution_due: hoursAgo(64),
+				sla_breach: false,
+				escalation_count: 0,
+				auto_response_sent: true,
+				auto_response_type: "perfect",
+				created_at: hoursAgo(2),
+				updated_at: hoursAgo(2),
+			},
+			{
+				organization_id: orgId,
+				subject: "On-premise deployment requirements and EU hosting options",
+				summary: "Customer evaluating on-prem deployment, asking about hardware specs and EU hosting.",
+				status: "New",
+				severity: "P3",
+				category: "Hardware/Infrastructure",
+				subcategory: "On-Premise",
+				account_id: findAccount("waynetech.com"),
+				contact_id: findContact("lucius@waynetech.com"),
+				ai_confidence: 0.84,
+				assigned_team: "Technical Support",
+				sla_first_response_due: hoursAgo(12),
+				sla_resolution_due: hoursAgo(60),
+				sla_breach: false,
+				escalation_count: 0,
+				auto_response_sent: true,
+				auto_response_type: "perfect",
+				created_at: hoursAgo(3),
+				updated_at: hoursAgo(3),
+			},
+			{
+				organization_id: orgId,
+				subject: "How to set up webhook notifications for report completion?",
+				summary: "Customer unable to find correct event type for webhook report completion notifications.",
+				status: "Resolved",
+				severity: "P3",
+				category: "How-To/Documentation",
+				subcategory: "Webhooks",
+				account_id: findAccount("globex.io"),
+				contact_id: findContact("tom.b@globex.io"),
+				ai_confidence: 0.87,
+				assigned_team: "Customer Success",
+				sla_first_response_due: daysAgo(1),
+				sla_resolution_due: daysAgo(1),
+				sla_first_response_at: daysAgo(1),
+				sla_resolved_at: new Date(now.setHours(0, 30, 0, 0)).toISOString(),
+				sla_breach: false,
+				escalation_count: 0,
+				auto_response_sent: true,
+				auto_response_type: "perfect",
+				created_at: daysAgo(1),
+				updated_at: hoursAgo(10),
+			},
+			{
+				organization_id: orgId,
+				subject: "Feature suggestion: Dark mode for dashboard",
+				summary: "Customer requesting dark mode support for late-night usage.",
+				status: "Resolved",
+				severity: "P4",
+				category: "Feature Request",
+				subcategory: "UI/UX",
+				account_id: findAccount("waynetech.com"),
+				contact_id: findContact("bruce@waynetech.com"),
+				ai_confidence: 0.92,
+				assigned_team: "Product Team",
+				sla_first_response_due: daysAgo(2),
+				sla_resolution_due: daysAgo(1),
+				sla_first_response_at: daysAgo(2),
+				sla_resolved_at: daysAgo(1),
+				sla_breach: false,
+				escalation_count: 0,
+				auto_response_sent: true,
+				auto_response_type: "perfect",
+				created_at: daysAgo(2),
+				updated_at: daysAgo(1),
+			},
+			{
+				organization_id: orgId,
+				subject: "Feature request: CSV export for custom report builder",
+				summary: "Developer requests CSV export from report builder for BI pipeline integration.",
+				status: "Resolved",
+				severity: "P4",
+				category: "Feature Request",
+				subcategory: "Export",
+				account_id: findAccount("acmecorp.com"),
+				contact_id: findContact("jane.smith@acmecorp.com"),
+				ai_confidence: 0.91,
+				assigned_team: "Product Team",
+				sla_first_response_due: daysAgo(3),
+				sla_resolution_due: daysAgo(2),
+				sla_first_response_at: daysAgo(3),
+				sla_resolved_at: daysAgo(2),
+				sla_breach: false,
+				escalation_count: 0,
+				auto_response_sent: true,
+				auto_response_type: "perfect",
+				created_at: daysAgo(3),
+				updated_at: daysAgo(2),
+			},
+			{
+				organization_id: orgId,
+				subject: "Where can I find the API documentation?",
+				summary: "New user unable to locate API documentation link.",
+				status: "Closed",
+				severity: "P4",
+				category: "How-To/Documentation",
+				subcategory: "API Docs",
+				account_id: findAccount("initech.co"),
+				contact_id: findContact("milton@initech.co"),
+				ai_confidence: 0.96,
+				assigned_team: "Customer Success",
+				sla_first_response_due: daysAgo(2),
+				sla_resolution_due: daysAgo(1),
+				sla_first_response_at: daysAgo(2),
+				sla_resolved_at: daysAgo(1),
+				sla_breach: false,
+				escalation_count: 0,
+				auto_response_sent: true,
+				auto_response_type: "perfect",
+				created_at: daysAgo(2),
+				updated_at: daysAgo(1),
+			},
+			{
+				organization_id: orgId,
+				subject: "Interested in your Enterprise plan - need pricing details",
+				summary: "Prospective enterprise customer evaluating plans, comparing with Zendesk/Freshdesk.",
+				status: "New",
+				severity: "P4",
+				category: "General Inquiry",
+				subcategory: "Pricing",
+				account_id: null,
+				contact_id: findContact("prospect@newcompany.com"),
+				ai_confidence: 0.88,
+				assigned_team: "Customer Success",
+				sla_first_response_due: hoursAgo(60),
+				sla_resolution_due: hoursAgo(10),
+				sla_breach: false,
+				escalation_count: 0,
+				auto_response_sent: true,
+				auto_response_type: "perfect",
+				created_at: hoursAgo(4),
+				updated_at: hoursAgo(4),
+			},
+		];
+
+		const { data: insertedTickets, error: ticketsError } = await supabase
+			.from("tickets")
+			.insert(ticketRows)
+			.select("id, ticket_number, subject, status, severity, created_at");
+
+		if (ticketsError) throw new Error(`Tickets: ${ticketsError.message}`);
+
+		// Insert audit logs for each ticket
+		const auditLogs = (insertedTickets || []).map((t) => ({
+			organization_id: orgId,
+			ticket_id: t.id,
+			action: "ticket_created",
+			details: {
+				ticket_number: t.ticket_number,
+				severity: t.severity,
+				status: t.status,
+			},
+			performed_by: "system",
+			created_at: t.created_at,
+		}));
+
+		// Add a few status-change audit entries for realism
+		if (insertedTickets && insertedTickets.length >= 3) {
+			auditLogs.push(
+				{
+					organization_id: orgId,
+					ticket_id: insertedTickets[0].id,
+					action: "status_changed",
+					details: {
+						ticket_number: insertedTickets[0].ticket_number,
+						from: "New",
+						to: "In Progress",
+					},
+					performed_by: "agent@sharpflow.com",
+					created_at: hoursAgo(3),
+				},
+				{
+					organization_id: orgId,
+					ticket_id: insertedTickets[1].id,
+					action: "escalated",
+					details: {
+						ticket_number: insertedTickets[1].ticket_number,
+						escalation_count: 3,
+						reason: "No response to prior tickets",
+					},
+					performed_by: "system",
+					created_at: hoursAgo(6),
+				},
+			);
+		}
+
+		const { error: auditError } = await supabase
+			.from("audit_logs")
+			.insert(auditLogs);
+		if (auditError) throw new Error(`Audit logs: ${auditError.message}`);
+
+		return NextResponse.json({
+			success: true,
+			counts: {
+				tickets: insertedTickets?.length || 0,
+				audit_logs: auditLogs.length,
+			},
+			tickets: insertedTickets?.map((t) => ({
+				number: t.ticket_number,
+				subject: t.subject.substring(0, 60),
+				status: t.status,
+				severity: t.severity,
+			})),
+			message: "Tickets and audit logs seeded directly (no AI pipeline needed).",
+		});
+	} catch (error) {
+		console.error("Ticket seed error:", error);
+		return NextResponse.json(
+			{ error: error instanceof Error ? error.message : "Ticket seed failed" },
 			{ status: 500 },
 		);
 	}

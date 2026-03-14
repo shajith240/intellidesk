@@ -388,6 +388,24 @@ export async function POST() {
 	try {
 		const supabase = supabaseAdmin;
 
+		// Look up the default org (sharpflow) to tag all emails
+		const { data: org, error: orgError } = await supabase
+			.from("organizations")
+			.select("id")
+			.eq("slug", "sharpflow")
+			.single();
+
+		if (orgError || !org) {
+			return NextResponse.json(
+				{
+					error:
+						"Organization 'sharpflow' not found. Please run migration 005 first.",
+				},
+				{ status: 400 },
+			);
+		}
+		const orgId = org.id;
+
 		// Insert test emails directly (not through the pipeline)
 		const results = [];
 		for (const email of testEmails) {
@@ -410,6 +428,7 @@ export async function POST() {
 					is_spam: false,
 					language: null,
 					embedding_id: null,
+					organization_id: orgId,
 				})
 				.select("id, subject")
 				.single();
