@@ -35,17 +35,17 @@ export async function PATCH() {
 
 		const results: Record<string, number> = {};
 		for (const table of tables) {
-			const { count, error } = await supabaseAdmin
+			const { data, error } = await supabaseAdmin
 				.from(table)
 				.update({ organization_id: orgId })
 				.is("organization_id", null)
-				.select("*", { count: "exact", head: true });
+				.select("id");
 
 			if (error) {
 				console.error(`Failed to update ${table}:`, error.message);
 				results[table] = -1;
 			} else {
-				results[table] = count ?? 0;
+				results[table] = data?.length ?? 0;
 			}
 		}
 
