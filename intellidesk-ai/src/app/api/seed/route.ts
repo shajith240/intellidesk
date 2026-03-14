@@ -1145,7 +1145,7 @@ export async function PATCH() {
 		if (ticketsError) throw new Error(`Tickets: ${ticketsError.message}`);
 
 		// Insert audit logs for each ticket
-		const auditLogs = (insertedTickets || []).map((t) => ({
+		const auditLogs: Record<string, unknown>[] = (insertedTickets || []).map((t) => ({
 			organization_id: orgId,
 			ticket_id: t.id,
 			action: "ticket_created",
